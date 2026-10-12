@@ -112,10 +112,10 @@ SET client_min_messages TO DEBUG1;
 </NumberedItem>
 
 <NumberedItem title={`Run the ${C.JOB}`}>
-Replace `1000` with your `job_id`:
+Replace `<JOB_ID>` with the `job_id` that `add_job` returned:
 
 ```sql
-CALL run_job(1000);
+CALL run_job(<JOB_ID>);
 ```
 </NumberedItem>
 </NumberedList>
@@ -126,34 +126,34 @@ Alter an existing {C.JOB} with [`alter_job`](/reference/timescaledb/jobs-automat
 
 <NumberedList>
 <NumberedItem title={`Change a ${C.JOB}'s config`}>
-To replace the entire JSON config for a {C.JOB}, call `alter_job` with a new `config` object. For example, replace the JSON config for a {C.JOB} with ID `1000`:
+To replace the entire JSON config for a {C.JOB}, call `alter_job` with a new `config` object. Replace `<JOB_ID>` with the `job_id` that `add_job` returned:
 
 ```sql
-SELECT alter_job(1000, config => '{"hypertable":"metrics"}');
+SELECT alter_job(<JOB_ID>, config => '{"hypertable":"metrics"}');
 ```
 </NumberedItem>
 
 <NumberedItem title={`Turn off ${C.JOB} scheduling`}>
-To turn off automatic scheduling of a {C.JOB}, call `alter_job` and set `scheduled` to `false`. You can still run the {C.JOB} manually with `run_job`. For example, turn off the scheduling for a {C.JOB} with ID `1000`:
+To turn off automatic scheduling of a {C.JOB}, call `alter_job` and set `scheduled` to `false`. You can still run the {C.JOB} manually with `run_job`. For example:
 
 ```sql
-SELECT alter_job(1000, scheduled => false);
+SELECT alter_job(<JOB_ID>, scheduled => false);
 ```
 </NumberedItem>
 
 <NumberedItem title="Re-enable automatic scheduling">
-To re-enable automatic scheduling of a {C.JOB}, call `alter_job` and set `scheduled` to `true`. For example, re-enable scheduling for a {C.JOB} with ID `1000`:
+To re-enable automatic scheduling of a {C.JOB}, call `alter_job` and set `scheduled` to `true`. For example:
 
 ```sql
-SELECT alter_job(1000, scheduled => true);
+SELECT alter_job(<JOB_ID>, scheduled => true);
 ```
 </NumberedItem>
 
 <NumberedItem title={`Delete a ${C.JOB} with \`delete_job\``}>
-For example, to delete a {C.JOB} with ID `1000`:
+Replace `<JOB_ID>` with the `job_id` of the {C.JOB} to delete:
 
 ```sql
-SELECT delete_job(1000);
+SELECT delete_job(<JOB_ID>);
 ```
 </NumberedItem>
 </NumberedList>
