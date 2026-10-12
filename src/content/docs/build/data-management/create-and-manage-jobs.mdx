@@ -31,6 +31,7 @@ Wrap it in a `CREATE` statement:
 ```sql
 CREATE FUNCTION <function_name> (job_id INT DEFAULT NULL, config JSONB DEFAULT NULL)
 RETURNS VOID
+AS $<variable_name>$
 DECLARE
     <declaration>;
 BEGIN
