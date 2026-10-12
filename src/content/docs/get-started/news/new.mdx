@@ -197,6 +197,33 @@ See [Service explorer](/deploy/tiger-cloud/tiger-cloud-aws/service-management/se
 
 </ChangelogEntry>
 
+## TimescaleDB v2.30 now on Tiger Cloud
+
+<ChangelogEntry
+  title="TimescaleDB v2.30 now on Tiger Cloud"
+  date="2026-09-22"
+  tags={["performance"]}
+>
+<h2 slot="heading" class="changelog-entry__title">TimescaleDB v2.30 now on Tiger Cloud</h2>
+
+TimescaleDB 2.30.0 is a lighter, planner- and compression-focused release: faster planning for common "latest row" and "last N readings" queries on hypertables with many chunks, broader coverage for the Batch Sorted Merge optimization on compressed data, and a new opt-in write path for compression. TimescaleDB 2.30.0 was released on GitHub on September 8, 2026, and is available on Tiger Cloud as of September 22, 2026.
+
+### Highlighted features in TimescaleDB v2.30
+
+**Smarter query planning for latest-row queries**
+
+This release cuts planning overhead for two common query shapes on hypertables with large numbers of chunks.
+
+- **Deferred Chunk Append:** A new custom scan node improves planning performance for `ORDER BY ... LIMIT` queries on hypertables with many chunks. Instead of expanding every chunk into a plan node during planning, it defers chunk enumeration until execution time and stops as soon as the `LIMIT` is satisfied, which helps with "get the latest row" and "last N readings" queries on long-lived hypertables, where planning time previously scaled linearly with chunk count. On by default; controlled with `timescaledb.enable_deferred_chunk_append`.
+- **Segmentwise Batch Sorted Merge:** Extends the existing Batch Sorted Merge optimization to more sort patterns. Queries that sort by `segmentby` columns followed by `orderby` columns (for example `ORDER BY device, time`) can now avoid an expensive `Sort` node, even when compressed batches aren't stored in strict order. Previously this only applied when the sort order matched compressed `orderby` metadata exactly, or `segmentby` columns were fixed to constants. On by default with the existing GUC `ts_guc_enable_decompression_sorted_merge`.
+
+**Faster compression writes on the columnstore**
+
+- **Custom detoaster for compression:** TimescaleDB can now intercept large compressed columnar batches and write them using a custom TOAST writer built for bulk compressed data, instead of routing them through PostgreSQL's general-purpose TOAST machinery. This reduces overhead from extra slicing, memory mapping, and generalized locking during compression, improving write throughput and lowering CPU overhead for background columnstore policy jobs and manual `convert_to_columnstore()` calls. This is opt-in behind the GUC `use_custom_toaster`. Benchmark in staging before enabling it in production.
+
+For complete details, refer to the [TimescaleDB 2.30.0 release notes](https://github.com/timescale/timescaledb/releases/tag/2.30.0).
+</ChangelogEntry>
+
 ## Tiger CLI 0.25: clearer command names, service rename and delete from agents, and a feedback command
 
 <ChangelogEntry
@@ -328,7 +355,7 @@ The billing page in Tiger Console now gives you clearer visibility into what dri
 - **Timeline view:** A new timeline shows how your usage and costs trend over the last 7 days, making it easier to spot changes and plan ahead.
 
 </ChangelogEntry>
-  
+
 ## TimescaleDB v2.29 now on Tiger Cloud
 
 <ChangelogEntry
