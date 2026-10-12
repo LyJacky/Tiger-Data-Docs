@@ -92,11 +92,12 @@ SELECT * FROM timescaledb_information.jobs;
 The result looks like this:
 
 ```sql
-job_id |      application_name      | schedule_interval | max_runtime | max_retries | retry_period |      proc_schema      |    proc_name     |   owner   | scheduled |         config         |          next_start           | hypertable_schema | hypertable_name
---------+----------------------------+-------------------+-------------+-------------+--------------+-----------------------+------------------+-----------+-----------+------------------------+-------------------------------+-------------------+-----------------
-1 | Telemetry Reporter [1]     | 24:00:00          | 00:01:40    |          -1 | 01:00:00     | _timescaledb_internal | policy_telemetry | postgres  | t         |                        | 2022-08-18 06:26:39.524065+00 |                   |
-1000 | User-Defined Action [1000] | 01:00:00          | 00:00:00    |          -1 | 00:05:00     | public                | reindex_mytable  | tsdbadmin | t         |                        | 2022-08-17 07:17:24.831698+00 |                   |
-(2 rows)
+ job_id |           application_name           | schedule_interval | max_runtime | max_retries | retry_period |      proc_schema       |             proc_name             |   owner   | scheduled | fixed_schedule |                                         config                                         |          next_start           |         initial_start         | hypertable_schema | hypertable_name |      check_schema      |               check_name
+--------+--------------------------------------+-------------------+-------------+-------------+--------------+------------------------+-----------------------------------+-----------+-----------+----------------+----------------------------------------------------------------------------------------+-------------------------------+-------------------------------+-------------------+-----------------+------------------------+-----------------------------------------
+   1074 | User-Defined Action [1074]           | 01:00:00          | 00:00:00    |          -1 | 00:05:00     | public                 | reindex_mytable                   | tsdbadmin | t         | t              |                                                                                        | 2026-10-12 09:28:40.657211+00 | 2026-10-12 09:28:40.657211+00 |                   |                 |                        |
+      3 | Job History Log Retention Policy [3] | 06:00:00          | 01:00:00    |          -1 | 01:00:00     | _timescaledb_functions | policy_job_stat_history_retention | tsdbadmin | t         | t              | {"drop_after": "1 month", "max_failures_per_job": 1000, "max_successes_per_job": 1000} | 2026-10-12 12:00:00+00        | 2000-01-01 00:00:00+00        |                   |                 | _timescaledb_functions | policy_job_stat_history_retention_check
+      1 | Telemetry Reporter [1]               | 24:00:00          | 00:01:40    |          -1 | 01:00:00     | _timescaledb_functions | policy_telemetry                  | postgres  | t         | f              |                                                                                        | 2026-10-13 07:02:01.612712+00 |                               |                   |                 |                        |
+(3 rows)
 ```
 </NumberedItem>
 </NumberedList>
