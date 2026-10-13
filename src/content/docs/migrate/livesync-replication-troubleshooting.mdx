@@ -63,6 +63,40 @@ ALTER TABLE <schema>.<table> REPLICA IDENTITY FULL;              -- all columns 
 
 If your {C.PG} tables use native partitioning, setting `REPLICA IDENTITY` on the root (parent) table does not automatically apply it to the partitioned child tables. Set `REPLICA IDENTITY` on each partitioned child table individually.
 
+## Duplicate key error after a partition is detached on the source
+
+When the source detaches or drops a partition, for example with `pg_partman` retention, the target keeps its rows. If the source writes one of these keys again, the sync stops with:
+
+```
+ERROR: duplicate key value violates unique constraint "<constraint>"
+```
+
+To recover:
+
+<NumberedList>
+
+<NumberedItem title="Delete the rows of the removed partition on the target">
+
+```sql
+DELETE FROM <schema>.<table>
+WHERE <partition column> >= '<partition lower bound>'
+  AND <partition column> < '<partition upper bound>';
+```
+
+</NumberedItem>
+
+<NumberedItem title="Restart Livesync and wait for it to catch up">
+Livesync applies the rows that the source wrote again.
+</NumberedItem>
+
+<NumberedItem title="Copy the rows that are missing on the target">
+Compare the partition range on the source and the target, and copy the rows that only the source has.
+</NumberedItem>
+
+</NumberedList>
+
+To prevent this error, delete the same rows on the target each time you detach or drop a partition on the source.
+
 ## Lag growing
 
 Scale up the target. Check for long-running transactions on the source that hold `xmin` and prevent WAL cleanup:
