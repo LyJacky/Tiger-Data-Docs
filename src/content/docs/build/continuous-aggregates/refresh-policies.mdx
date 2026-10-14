@@ -130,12 +130,12 @@ Use [any {C.PG} client](/integrate/find-connection-details) to connect.
 </NumberedItem>
 
 <NumberedItem title="Create the recent data policy">
-Create a new policy on `conditions_summary_daily`
+Create a new policy on `conditions_summary_hourly`
 to refresh the {C.CAGG} with recently inserted data which runs
 hourly:
 
 ```sql
-SELECT add_continuous_aggregate_policy('conditions_summary_daily',
+SELECT add_continuous_aggregate_policy('conditions_summary_hourly',
   start_offset => INTERVAL '1 day',
   end_offset => INTERVAL '1 h',
   schedule_interval => INTERVAL '1 h');
@@ -143,11 +143,11 @@ SELECT add_continuous_aggregate_policy('conditions_summary_daily',
 </NumberedItem>
 
 <NumberedItem title="Create the backfill policy">
-Create a concurrent policy on `conditions_summary_daily` to refresh the {C.CAGG} with
+Create a concurrent policy on `conditions_summary_hourly` to refresh the {C.CAGG} with
 backfilled data:
 
 ```sql
-SELECT add_continuous_aggregate_policy('conditions_summary_daily',
+SELECT add_continuous_aggregate_policy('conditions_summary_hourly',
   start_offset => NULL,
   end_offset => INTERVAL '1 day',
   schedule_interval => INTERVAL '1 hour');

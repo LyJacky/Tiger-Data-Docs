@@ -145,12 +145,12 @@ example:
 ```sql
 CREATE MATERIALIZED VIEW conditions_summary_daily_3
 WITH (timescaledb.continuous) AS
-SELECT time_bucket(INTERVAL '1 day', day) AS bucket,
+SELECT time_bucket(INTERVAL '1 day', time) AS bucket,
    AVG(temperature),
    MAX(temperature),
    MIN(temperature),
    name
-FROM devices JOIN conditions USING (device_id)
+FROM conditions JOIN devices ON devices.device_id = conditions.device
 GROUP BY name, bucket;
 ```
 
@@ -175,7 +175,7 @@ enabled.
 
 ```sql
 SELECT *
-  FROM conditions_summary_hourly
+  FROM conditions_summary_daily
   WHERE device = 5
   AND bucket >= '2020-01-01'
   AND bucket < '2020-04-01';
@@ -186,7 +186,7 @@ SELECT *
 
 ```sql
 SELECT *
-  FROM conditions_summary_hourly
+  FROM conditions_summary_daily
   WHERE max - min > 1800
   AND bucket >= '2020-01-01' AND bucket < '2020-04-01'
   ORDER BY bucket DESC, device DESC LIMIT 20;
@@ -221,12 +221,13 @@ Support is experimental, there is a risk of data inconsistency. For example, in 
 To use a window function in a {C.CAGG}:
 
 <NumberedList>
-<NumberedItem title="Create a simple table">
+<NumberedItem title="Create a simple hypertable">
 ```sql
-CREATE TABLE example (
-  time       TIMESTAMPTZ       NOT NULL,
-  value      TEXT              NOT NULL
-);
+CREATE TABLE sales (
+  time         TIMESTAMPTZ       NOT NULL,
+  customer_id  INTEGER           NOT NULL,
+  amount       NUMERIC           NOT NULL
+) WITH (tsdb.hypertable, tsdb.partition_column = 'time');
 ```
 </NumberedItem>
 
@@ -264,14 +265,14 @@ Window functions that partition by time_bucket should be safe even with LAG()/LE
 For {C.TIMESCALE_DB} v2.19.3 and below, {C.CAGG}s do not support window functions. To work around this:
 
 <NumberedList>
-<NumberedItem title="Create a simple table">
-Create a simple table to store a value at a specific time:
+<NumberedItem title="Create a simple hypertable">
+Create a simple {C.HYPERTABLE} to store a value at a specific time:
 
 ```sql
 CREATE TABLE example (
   time       TIMESTAMPTZ       NOT NULL,
-  value      TEXT              NOT NULL
-);
+  value      DOUBLE PRECISION  NOT NULL
+) WITH (tsdb.hypertable, tsdb.partition_column = 'time');
 ```
 </NumberedItem>
 
