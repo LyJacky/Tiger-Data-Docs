@@ -126,7 +126,7 @@ ORDER BY xmin_age DESC;
 
 If the target's IOPS or disk throughput is pinned during the initial data copy, the most common cause is index maintenance on the destination tables. Each non-PK index has to be updated for every `COPY`'d row, which multiplies the I/O cost.
 
-Drop the non-PK indexes on the target before the copy and recreate them after all tables reach state `r` or `s`. Primary-key and unique-constraint indexes must stay; Livesync uses them for `INSERT ... ON CONFLICT` deduplication.
+Drop the non-PK indexes on the target before the copy and recreate them after all tables reach state `r` or `s`. Primary-key and unique-constraint indexes must stay; Livesync uses them to find the rows for `UPDATE` and `DELETE`, and they reject duplicate rows.
 
 ```sql
 -- On the TARGET, before initial copy:
