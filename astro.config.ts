@@ -47,7 +47,7 @@ function flattenApiReferenceSidebar(
       }
     }
     if (own.length > 0) {
-      out.push({ ...item, entries: own, collapsed: false });
+      out.push({ ...item, entries: own, collapsed: true });
     }
     for (const sub of nested) {
       if (sub.kind === "group" && !(sub.entries.length === 1 && sub.entries[0].kind !== "group")) {
