@@ -9,6 +9,7 @@ import {
   generateAPIReferenceItems,
   stainlessDocs,
 } from "@stainless-api/docs";
+import type { ReferenceSidebarConfigItem } from "@stainless-api/docs";
 import starlightLlmsTxt from "starlight-llms-txt";
 import sitemap from "@astrojs/sitemap";
 import rehypeBasePath from "./src/plugins/rehype-base-path";
@@ -19,6 +20,74 @@ import { createSitemapSerializer } from "./src/lib/sitemap-lastmod";
 import sentry from "@sentry/astro";
 
 const require = createRequire(import.meta.url);
+
+/**
+ * Stainless labels sidebar entries by capitalising every word of the
+ * stainless.yml key ("Retrieve Replica Sets", "Set Ha", "Vpcs"). House style
+ * is sentence case, with product acronyms kept as acronyms.
+ */
+const NAV_ACRONYMS: Record<string, string> = {
+  ha: "HA",
+  vpc: "VPC",
+  vpcs: "VPCs",
+};
+
+/** Label a method page by its spec summary ("Stop a service") rather than its key ("Stop"). */
+function labelFor(item: ReferenceSidebarConfigItem): string {
+  const summary = item.kind === "method_page" ? item.metadata?.summary : undefined;
+  return sentenceCase(summary?.trim() || item.label);
+}
+
+function sentenceCase(label: string): string {
+  return label
+    .split(" ")
+    .map((word, i) => {
+      const lower = word.toLowerCase();
+      if (NAV_ACRONYMS[lower]) return NAV_ACRONYMS[lower];
+      return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+    })
+    .join(" ");
+}
+
+/**
+ * Flatten the generated REST reference sidebar to one level of groups.
+ *
+ * Stainless nests resource groups the way `stainless/stainless.yml` nests
+ * resources (projects > services > metrics > details), which buries most
+ * endpoints two or three levels deep. Hoist every nested group to the top
+ * level, and fold a group with a single method into its parent. Page URLs
+ * are unaffected: they come from the resource tree, not from the sidebar.
+ */
+function flattenApiReferenceSidebar(
+  items: ReferenceSidebarConfigItem[],
+): ReferenceSidebarConfigItem[] {
+  const out: ReferenceSidebarConfigItem[] = [];
+  const visit = (item: ReferenceSidebarConfigItem) => {
+    if (item.kind !== "group") {
+      out.push({ ...item, label: labelFor(item) });
+      return;
+    }
+    const own = item.entries
+      .filter((e) => e.kind !== "group")
+      .map((e) => ({ ...e, label: labelFor(e) }));
+    const nested = item.entries.filter((e) => e.kind === "group");
+    for (const sub of nested) {
+      if (sub.kind === "group" && sub.entries.length === 1 && sub.entries[0].kind !== "group") {
+        own.push({ ...sub.entries[0], label: labelFor(sub.entries[0]) });
+      }
+    }
+    if (own.length > 0) {
+      out.push({ ...item, label: sentenceCase(item.label), entries: own, collapsed: true });
+    }
+    for (const sub of nested) {
+      if (sub.kind === "group" && !(sub.entries.length === 1 && sub.entries[0].kind !== "group")) {
+        visit(sub);
+      }
+    }
+  };
+  items.forEach(visit);
+  return out;
+}
 
 // Resolve package subpaths so aliasing the main "components" entry doesn't break ThemeSelect/SDKSelect.
 const docsComponentsScriptsPath = require.resolve("@stainless-api/docs/components/scripts");
@@ -33,7 +102,7 @@ const docsComponentsScriptsPath = require.resolve("@stainless-api/docs/component
  * 2) Plugins such as `@vitejs/plugin-react` may delete `transform` in `configResolved`
  *    after Vite has cached which plugins expose `transform`, so `getHookHandler` returns
  *    undefined and handler.call() throws (upstream: vitejs/vite#21162). We ship a pnpm
- *    patch for `vite@7.3.1` (`patches/vite@7.3.1.patch`) that skips when `!handler`.
+ *    patch for `vite@7.3.5` (`patches/vite@7.3.5.patch`) that skips when `!handler`.
  */
 const HOOK_NAMES = ["transform", "load", "resolveId"] as const;
 const noopHandlers: Record<(typeof HOOK_NAMES)[number], () => null> = {
@@ -240,7 +309,7 @@ export default defineConfig({
         llmsTxt: { disabled: true },
         propertySettings: {
           collapseDescription: false,
-          expandDepth: 2,
+          expandDepth: 0,
         },
       },
       title: "Tiger Data Docs",
@@ -1950,9 +2019,10 @@ export default defineConfig({
                 {
                   label: "Tiger Cloud REST API",
                   collapsed: true,
-                  items: generateAPIReferenceItems({
-                    excludeResourceOverviewPages: true,
-                  }),
+                  items: generateAPIReferenceItems(
+                    { excludeResourceOverviewPages: true },
+                    flattenApiReferenceSidebar,
+                  ),
                 },
                 {
                   label: "Data tiering",
