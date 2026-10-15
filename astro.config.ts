@@ -32,6 +32,12 @@ const NAV_ACRONYMS: Record<string, string> = {
   vpcs: "VPCs",
 };
 
+/** Label a method page by its spec summary ("Stop a service") rather than its key ("Stop"). */
+function labelFor(item: ReferenceSidebarConfigItem): string {
+  const summary = item.kind === "method_page" ? item.metadata?.summary : undefined;
+  return sentenceCase(summary?.trim() || item.label);
+}
+
 function sentenceCase(label: string): string {
   return label
     .split(" ")
@@ -58,16 +64,16 @@ function flattenApiReferenceSidebar(
   const out: ReferenceSidebarConfigItem[] = [];
   const visit = (item: ReferenceSidebarConfigItem) => {
     if (item.kind !== "group") {
-      out.push({ ...item, label: sentenceCase(item.label) });
+      out.push({ ...item, label: labelFor(item) });
       return;
     }
     const own = item.entries
       .filter((e) => e.kind !== "group")
-      .map((e) => ({ ...e, label: sentenceCase(e.label) }));
+      .map((e) => ({ ...e, label: labelFor(e) }));
     const nested = item.entries.filter((e) => e.kind === "group");
     for (const sub of nested) {
       if (sub.kind === "group" && sub.entries.length === 1 && sub.entries[0].kind !== "group") {
-        own.push({ ...sub.entries[0], label: sentenceCase(sub.entries[0].label) });
+        own.push({ ...sub.entries[0], label: labelFor(sub.entries[0]) });
       }
     }
     if (own.length > 0) {
