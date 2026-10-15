@@ -39,13 +39,18 @@ nav.sidebar .sidebar-content a:hover,
  * REST reference entries: the base rule above spreads the HTTP method badge
  * and the label to opposite edges, so the gap shrinks with each nesting level,
  * and centres the badge against a label that wraps. Pack them at the start
- * with a fixed gap, and keep the badge on the first line (the 20px badge sits
- * inside the 21px line box, so no offset is needed).
+ * with a fixed gap and keep the badge on the first line. The 20px badge sits
+ * inside the 21px line box; nudge it down so it centres on the lowercase
+ * glyphs rather than the line box, which reads as too high.
  */
 #starlight__sidebar a[data-stldocs-method] {
   justify-content: flex-start;
   align-items: flex-start;
   column-gap: 0.5rem;
+}
+
+#starlight__sidebar a[data-stldocs-method] > .stl-sidebar-icon {
+  margin-top: 2px;
 }
 
 /*
