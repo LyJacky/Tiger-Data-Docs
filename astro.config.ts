@@ -22,6 +22,28 @@ import sentry from "@sentry/astro";
 const require = createRequire(import.meta.url);
 
 /**
+ * Stainless labels sidebar entries by capitalising every word of the
+ * stainless.yml key ("Retrieve Replica Sets", "Set Ha", "Vpcs"). House style
+ * is sentence case, with product acronyms kept as acronyms.
+ */
+const NAV_ACRONYMS: Record<string, string> = {
+  ha: "HA",
+  vpc: "VPC",
+  vpcs: "VPCs",
+};
+
+function sentenceCase(label: string): string {
+  return label
+    .split(" ")
+    .map((word, i) => {
+      const lower = word.toLowerCase();
+      if (NAV_ACRONYMS[lower]) return NAV_ACRONYMS[lower];
+      return i === 0 ? lower.charAt(0).toUpperCase() + lower.slice(1) : lower;
+    })
+    .join(" ");
+}
+
+/**
  * Flatten the generated REST reference sidebar to one level of groups.
  *
  * Stainless nests resource groups the way `stainless/stainless.yml` nests
@@ -36,18 +58,20 @@ function flattenApiReferenceSidebar(
   const out: ReferenceSidebarConfigItem[] = [];
   const visit = (item: ReferenceSidebarConfigItem) => {
     if (item.kind !== "group") {
-      out.push(item);
+      out.push({ ...item, label: sentenceCase(item.label) });
       return;
     }
-    const own = item.entries.filter((e) => e.kind !== "group");
+    const own = item.entries
+      .filter((e) => e.kind !== "group")
+      .map((e) => ({ ...e, label: sentenceCase(e.label) }));
     const nested = item.entries.filter((e) => e.kind === "group");
     for (const sub of nested) {
       if (sub.kind === "group" && sub.entries.length === 1 && sub.entries[0].kind !== "group") {
-        own.push(sub.entries[0]);
+        own.push({ ...sub.entries[0], label: sentenceCase(sub.entries[0].label) });
       }
     }
     if (own.length > 0) {
-      out.push({ ...item, entries: own, collapsed: true });
+      out.push({ ...item, label: sentenceCase(item.label), entries: own, collapsed: true });
     }
     for (const sub of nested) {
       if (sub.kind === "group" && !(sub.entries.length === 1 && sub.entries[0].kind !== "group")) {
