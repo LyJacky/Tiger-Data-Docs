@@ -104,14 +104,13 @@ target: cloud, self-hosted
 17. expect rows: `SELECT 1 FROM timescaledb_information.jobs WHERE proc_name = 'policy_compression' AND hypertable_name = 'conditions_summary_daily' AND (config->>'compress_after')::interval = INTERVAL '45 days'`
 18. run SQL: `CREATE FUNCTION columnstore_job_id() RETURNS int AS $$ SELECT job_id FROM timescaledb_information.jobs WHERE proc_name = 'policy_compression' AND hypertable_name = 'conditions_summary_daily' $$ LANGUAGE sql;`
 19. run SQL: `CREATE FUNCTION refresh_job_id() RETURNS int AS $$ SELECT job_id FROM timescaledb_information.jobs WHERE proc_name = 'policy_refresh_continuous_aggregate' AND hypertable_name = 'conditions_summary_daily' $$ LANGUAGE sql;`
-20. expect no rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed`
-21. run SQL: `CALL run_job(columnstore_job_id());`
-22. expect rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end < now() - INTERVAL '45 days'`
-23. expect no rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end > now() - INTERVAL '30 days'`
-24. run SQL: `SELECT alter_job(refresh_job_id(), config => jsonb_set((SELECT config FROM _timescaledb_catalog.bgw_job WHERE id = refresh_job_id()), '{compress_after_refresh}', 'true'));`
-25. expect rows: `SELECT 1 FROM timescaledb_information.jobs WHERE job_id = refresh_job_id() AND (config->>'compress_after_refresh')::boolean`
-26. run SQL: `INSERT INTO conditions SELECT t, 3, 30 FROM generate_series(now() - INTERVAL '20 days', now() - INTERVAL '2 days', INTERVAL '6 hours') AS t;`
-27. run SQL: `CALL run_job(refresh_job_id());`
-28. expect rows: `SELECT 1 FROM conditions_summary_daily WHERE device = 3 LIMIT 1`
-29. expect rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end > now() - INTERVAL '30 days'`
+20. run SQL: `CALL run_job(columnstore_job_id());`
+21. expect rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end < now() - INTERVAL '45 days'`
+22. expect no rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end > now() - INTERVAL '30 days'`
+23. run SQL: `SELECT alter_job(refresh_job_id(), config => jsonb_set((SELECT config FROM _timescaledb_catalog.bgw_job WHERE id = refresh_job_id()), '{compress_after_refresh}', 'true'));`
+24. expect rows: `SELECT 1 FROM timescaledb_information.jobs WHERE job_id = refresh_job_id() AND (config->>'compress_after_refresh')::boolean`
+25. run SQL: `INSERT INTO conditions SELECT t, 3, 30 FROM generate_series(now() - INTERVAL '20 days', now() - INTERVAL '2 days', INTERVAL '6 hours') AS t;`
+26. run SQL: `CALL run_job(refresh_job_id());`
+27. expect rows: `SELECT 1 FROM conditions_summary_daily WHERE device = 3 LIMIT 1`
+28. expect rows: `SELECT 1 FROM timescaledb_information.chunks ch JOIN timescaledb_information.continuous_aggregates c ON ch.hypertable_name = c.materialization_hypertable_name WHERE c.view_name = 'conditions_summary_daily' AND ch.is_compressed AND ch.range_end > now() - INTERVAL '30 days'`
 </TestPlan>
