@@ -18,8 +18,9 @@ To save on storage costs, you use {C.HYPERCORE} to downsample historical data st
 [{C.COLUMNSTORE} policy](/reference/timescaledb/hypercore/add_columnstore_policy). This policy defines the intervals when {C.TIMESCALE_DB} converts {C.CHUNK}s in a {C.CAGG} from the {C.ROWSTORE} to the {C.COLUMNSTORE}.
 
 {C.COLUMNSTORE_CAP} works in the same way on [{C.HYPERTABLE}s and {C.CAGG}s](/learn/columnar-storage/understand-hypercore). When you enable
-{C.COLUMNSTORE} with no other options, your data is [segmented by](/reference/timescaledb/continuous-aggregates/alter_materialized_view#arguments) the `groupby` columns
-in the {C.CAGG}, and [ordered by](/reference/timescaledb/continuous-aggregates/alter_materialized_view#arguments) the time column. [{C.RTAGG_CAP}](/learn/continuous-aggregates/real-time-aggregates)
+{C.COLUMNSTORE} with no other options, your data is [ordered by](/reference/timescaledb/continuous-aggregates/alter_materialized_view#arguments) the `time_bucket` column
+followed by the remaining `GROUP BY` columns of the {C.CAGG}, and is not [segmented](/reference/timescaledb/continuous-aggregates/alter_materialized_view#arguments).
+Before {C.TIMESCALE_DB} v2.25.0, the default was to segment by the `GROUP BY` columns and order by the `time_bucket` column. [{C.RTAGG_CAP}](/learn/continuous-aggregates/real-time-aggregates)
 is disabled by default.
 
 <DoWithAi />
@@ -93,7 +94,7 @@ target: cloud, self-hosted
 7. expect rows: `SELECT 1 FROM timescaledb_information.continuous_aggregates WHERE view_name = 'conditions_summary_daily' AND NOT compression_enabled`
 8. run SQL: `ALTER MATERIALIZED VIEW conditions_summary_daily set (timescaledb.enable_columnstore = true);`
 9. expect rows: `SELECT 1 FROM timescaledb_information.continuous_aggregates WHERE view_name = 'conditions_summary_daily' AND compression_enabled AND materialized_only`
-10. expect rows: `SELECT 1 FROM timescaledb_information.hypertable_columnstore_settings s JOIN timescaledb_information.continuous_aggregates c ON s.hypertable = format('%I.%I', c.materialization_hypertable_schema, c.materialization_hypertable_name)::regclass WHERE c.view_name = 'conditions_summary_daily' AND s.segmentby = 'device' AND s.orderby LIKE 'bucket%'`
+10. expect rows: `SELECT 1 FROM timescaledb_information.hypertable_columnstore_settings s JOIN timescaledb_information.continuous_aggregates c ON s.hypertable = format('%I.%I', c.materialization_hypertable_schema, c.materialization_hypertable_name)::regclass WHERE c.view_name = 'conditions_summary_daily' AND coalesce(s.segmentby, '') = '' AND s.orderby = 'bucket,device'`
 11. run SQL: `ALTER MATERIALIZED VIEW conditions_summary_daily set (timescaledb.enable_columnstore = false);`
 12. expect rows: `SELECT 1 FROM timescaledb_information.continuous_aggregates WHERE view_name = 'conditions_summary_daily' AND NOT compression_enabled`
 13. run SQL: `ALTER MATERIALIZED VIEW conditions_summary_daily set (timescaledb.enable_columnstore = true);`
