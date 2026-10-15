@@ -9,6 +9,7 @@ import {
   generateAPIReferenceItems,
   stainlessDocs,
 } from "@stainless-api/docs";
+import type { ReferenceSidebarConfigItem } from "@stainless-api/docs";
 import starlightLlmsTxt from "starlight-llms-txt";
 import sitemap from "@astrojs/sitemap";
 import rehypeBasePath from "./src/plugins/rehype-base-path";
@@ -19,6 +20,44 @@ import { createSitemapSerializer } from "./src/lib/sitemap-lastmod";
 import sentry from "@sentry/astro";
 
 const require = createRequire(import.meta.url);
+
+/**
+ * Flatten the generated REST reference sidebar to one level of groups.
+ *
+ * Stainless nests resource groups the way `stainless/stainless.yml` nests
+ * resources (projects > services > metrics > details), which buries most
+ * endpoints two or three levels deep. Hoist every nested group to the top
+ * level, and fold a group with a single method into its parent. Page URLs
+ * are unaffected: they come from the resource tree, not from the sidebar.
+ */
+function flattenApiReferenceSidebar(
+  items: ReferenceSidebarConfigItem[],
+): ReferenceSidebarConfigItem[] {
+  const out: ReferenceSidebarConfigItem[] = [];
+  const visit = (item: ReferenceSidebarConfigItem) => {
+    if (item.kind !== "group") {
+      out.push(item);
+      return;
+    }
+    const own = item.entries.filter((e) => e.kind !== "group");
+    const nested = item.entries.filter((e) => e.kind === "group");
+    for (const sub of nested) {
+      if (sub.kind === "group" && sub.entries.length === 1 && sub.entries[0].kind !== "group") {
+        own.push(sub.entries[0]);
+      }
+    }
+    if (own.length > 0) {
+      out.push({ ...item, entries: own, collapsed: false });
+    }
+    for (const sub of nested) {
+      if (sub.kind === "group" && !(sub.entries.length === 1 && sub.entries[0].kind !== "group")) {
+        visit(sub);
+      }
+    }
+  };
+  items.forEach(visit);
+  return out;
+}
 
 // Resolve package subpaths so aliasing the main "components" entry doesn't break ThemeSelect/SDKSelect.
 const docsComponentsScriptsPath = require.resolve("@stainless-api/docs/components/scripts");
@@ -1949,9 +1988,10 @@ export default defineConfig({
                 {
                   label: "Tiger Cloud REST API",
                   collapsed: true,
-                  items: generateAPIReferenceItems({
-                    excludeResourceOverviewPages: true,
-                  }),
+                  items: generateAPIReferenceItems(
+                    { excludeResourceOverviewPages: true },
+                    flattenApiReferenceSidebar,
+                  ),
                 },
                 {
                   label: "Data tiering",
