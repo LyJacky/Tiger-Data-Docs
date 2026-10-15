@@ -240,7 +240,7 @@ export default defineConfig({
         llmsTxt: { disabled: true },
         propertySettings: {
           collapseDescription: false,
-          expandDepth: 2,
+          expandDepth: 0,
         },
       },
       title: "Tiger Data Docs",
