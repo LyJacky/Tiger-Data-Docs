@@ -60,14 +60,14 @@ To connect to {C.CLOUD_LONG}:
   </NumberedItem>
   <NumberedItem title="Configure the connection">
 
-    Fill in the connection name and use your [connection details](/integrate/find-connection-details) for `Host`, `Port` (`5432` by default), `Database`, `Username`, and `Password`. {C.CLOUD_LONG} requires SSL. To enforce it, expand `Advanced driver properties` and set `sslmode` to `require`.
+    Fill in the connection name and use your [connection details](/integrate/find-connection-details) for `Host`, `Port` (`5432` by default), `Database`, `Username`, and `Password`. {C.CLOUD_LONG} accepts unencrypted connections, so expand `Advanced driver properties` and set `sslmode` to `require` to make sure yours is encrypted.
 
   </NumberedItem>
   <NumberedItem title="Click `Test Connection`, then `Save & Connect`">
 
     A successful test shows `Connection successful` above the connection fields. `Save & Connect` saves the connection and opens it in the `Connections` sidebar.
 
-    <Image src={imgVisualeafTestConnection} alt="VisuaLeaf New Connection form with the TimescaleDB database type selected, host, port, and database filled in, and a Connection successful banner after clicking Test Connection" />
+    <Image src={imgVisualeafTestConnection} alt="VisuaLeaf New Connection form with the Tiger Cloud service host, port, database, and username filled in, and a Connection successful banner after clicking Test Connection" />
 
   </NumberedItem>
 </NumberedList>
@@ -79,9 +79,9 @@ You have successfully integrated VisuaLeaf with {C.CLOUD_LONG}.
 <NumberedList>
   <NumberedItem title="Browse the schema">
 
-    In the `Connections` sidebar, expand your connection, then your database. Expand the `public` schema, then `Tables`, to see your hypertables. The internal `_timescaledb_*` and `timescaledb_*` schemas are listed alongside your own schemas.
+    In the `Connections` sidebar, expand your connection, then your database. Expand the `public` schema, then `Tables`, to see your hypertables. The internal `_timescaledb_*` and `timescaledb_*` schemas are listed alongside your own schemas. Double-click a hypertable to open its rows in a data grid.
 
-    <Image src={imgVisualeafObjectBrowser} alt="VisuaLeaf Connections sidebar with the docs_demo database expanded, showing the internal _timescaledb schemas and the public schema's Tables folder containing the greenhouse_readings hypertable" />
+    <Image src={imgVisualeafObjectBrowser} alt="VisuaLeaf Connections sidebar with the tsdb database on Tiger Cloud expanded, showing the internal _timescaledb schemas and the public schema's Tables folder containing the greenhouse_readings hypertable, with the hypertable's rows open in a data grid beside it" />
 
   </NumberedItem>
   <NumberedItem title="Run a query against a hypertable">
